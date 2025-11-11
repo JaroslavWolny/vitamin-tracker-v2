@@ -1,112 +1,168 @@
 import React from 'react';
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { IconCheck, IconClock, IconPill, IconTrash } from '@tabler/icons-react';
 import type { Supplement } from '../types';
+import { formatTimeLabel } from '../utils/dateUtils';
 
 interface SupplementItemProps {
   supplement: Supplement;
   onTake: (id: string) => void;
   isTakenToday: boolean;
   isEditing: boolean;
-  onUpdate?: (id: string, newName: string) => void;
+  onUpdate?: (id: string, data: Partial<Supplement>) => void;
   onDelete?: (id: string) => void;
+  compact?: boolean;
 }
 
-const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-    </svg>
-);
+const categoryLabels: Record<Supplement['category'], string> = {
+  vitamin: 'Vitamín',
+  creatine: 'Kreatin',
+  other: 'Jiné',
+};
 
-const PillIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={className}>
-      <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
+const SupplementItem: React.FC<SupplementItemProps> = ({
+  supplement,
+  onTake,
+  isTakenToday,
+  isEditing,
+  onUpdate,
+  onDelete,
+  compact = false,
+}) => {
+  const radius = compact ? 'lg' : 'xl';
+  const padding = compact ? 'md' : 'lg';
 
-const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-    </svg>
-);
-
-const DragHandleIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-    </svg>
-);
-
-
-const SupplementItem: React.FC<SupplementItemProps> = ({ supplement, onTake, isTakenToday, isEditing, onUpdate, onDelete }) => {
   if (isEditing) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 flex items-center gap-3 transition-all duration-300 ease-in-out">
-        <span className="cursor-grab text-gray-400 dark:text-gray-500">
-          <DragHandleIcon className="w-6 h-6" />
-        </span>
-        <input
-          type="text"
-          value={supplement.name}
-          onChange={(e) => onUpdate?.(supplement.id, e.target.value)}
-          className="flex-grow bg-transparent text-lg font-semibold text-gray-700 dark:text-gray-200 focus:outline-none"
-          aria-label={`Název doplňku ${supplement.name}`}
-        />
-        <button
-          onClick={() => onDelete?.(supplement.id)}
-          className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-gray-700 dark:hover:text-red-400 transition-colors"
-          aria-label={`Smazat ${supplement.name}`}
-        >
-          <TrashIcon className="w-5 h-5"/>
-        </button>
-      </div>
-    )
+      <Card withBorder radius={radius} padding={padding}>
+        <Stack gap="sm">
+          <Group
+            align="flex-start"
+            justify="space-between"
+            wrap={compact ? 'wrap' : 'nowrap'}
+            gap="sm"
+          >
+            <TextInput
+              label="Název"
+              value={supplement.name}
+              onChange={(event) =>
+                onUpdate?.(supplement.id, { name: event.currentTarget.value })
+              }
+              flex={compact ? undefined : 1}
+              style={{ flex: compact ? '1 1 100%' : undefined }}
+            />
+            <ActionIcon
+              variant="light"
+              color="red"
+              onClick={() => onDelete?.(supplement.id)}
+              aria-label="Smazat doplněk"
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Group>
+          <TextInput
+            label="Dávkování / Poznámka"
+            value={supplement.dosage}
+            onChange={(event) =>
+              onUpdate?.(supplement.id, { dosage: event.currentTarget.value })
+            }
+          />
+          <Group grow gap="sm" align="flex-end" wrap={compact ? 'wrap' : 'nowrap'}>
+            <Select
+              label="Kategorie"
+              data={[
+                { value: 'vitamin', label: 'Vitamíny' },
+                { value: 'creatine', label: 'Kreatin' },
+                { value: 'other', label: 'Jiné' },
+              ]}
+              value={supplement.category}
+              onChange={(value) =>
+                value &&
+                onUpdate?.(supplement.id, {
+                  category: value as Supplement['category'],
+                })
+              }
+            />
+            <NumberInput
+              label="Upomínka (hodina)"
+              min={4}
+              max={22}
+              value={supplement.reminderHour}
+              onChange={(value) =>
+                typeof value === 'number' &&
+                onUpdate?.(supplement.id, { reminderHour: value })
+              }
+              style={{ flex: compact ? '1 1 100%' : undefined }}
+            />
+          </Group>
+        </Stack>
+      </Card>
+    );
   }
 
   return (
-    <div 
-        onClick={() => !isTakenToday && onTake(supplement.id)}
-        className={`
-        bg-white dark:bg-gray-800 
-        rounded-2xl shadow-lg 
-        p-4 flex items-center justify-between 
-        transition-all duration-300 ease-in-out
-        transform active:scale-95 cursor-pointer
-        ${isTakenToday ? 'opacity-60' : 'opacity-100'}`}>
-
-        <div className="flex items-center">
-            <div className={`
-                flex items-center justify-center 
-                w-12 h-12 rounded-full mr-4
-                transition-colors duration-300
-                ${isTakenToday ? 'bg-green-100 dark:bg-green-800/50' : 'bg-indigo-100 dark:bg-indigo-900/50'}`}>
-                {isTakenToday 
-                    ? <CheckIcon className="w-6 h-6 text-green-500 dark:text-green-400" /> 
-                    : <PillIcon className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
-                }
-            </div>
-            <span className={`
-                font-semibold text-lg 
-                transition-colors duration-300
-                ${isTakenToday ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-100'}`}>
-                {supplement.name}
-            </span>
-        </div>
-      
-        <button
-            onClick={(e) => { e.stopPropagation(); onTake(supplement.id); }}
-            disabled={isTakenToday}
-            className={`
-                px-5 py-2.5 rounded-xl 
-                font-bold text-sm
-                transition-all duration-300 ease-in-out
-                transform focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                disabled:cursor-not-allowed
-                ${isTakenToday
-                    ? 'bg-green-500/80 dark:bg-green-600/50 text-white'
-                    : 'bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white focus:ring-indigo-500'
-                }`}
+    <Card
+      withBorder
+      radius={radius}
+      padding={padding}
+      shadow="sm"
+      style={{
+        borderColor: isTakenToday ? 'var(--mantine-color-green-4)' : undefined,
+        opacity: isTakenToday ? 0.75 : 1,
+      }}
+    >
+      <Stack gap={compact ? 'md' : 'sm'}>
+        <Group align="flex-start" gap="md" wrap={compact ? 'wrap' : 'nowrap'}>
+          <ActionIcon
+            variant={isTakenToday ? 'filled' : 'light'}
+            color={isTakenToday ? 'green' : 'indigo'}
+            radius="xl"
+            size={compact ? 'lg' : 'xl'}
+            onClick={() => onTake(supplement.id)}
+            aria-label="Označit jako užité"
+          >
+            {isTakenToday ? <IconCheck size={18} /> : <IconPill size={18} />}
+          </ActionIcon>
+          <Stack gap={compact ? 4 : 6} style={{ flex: 1, minWidth: 0 }}>
+            <Group gap="xs">
+              <Text fw={600}>{supplement.name}</Text>
+              <Badge color="gray" variant="light" radius="sm">
+                {categoryLabels[supplement.category]}
+              </Badge>
+            </Group>
+            <Text size="sm" c="dimmed">
+              {supplement.dosage}
+            </Text>
+            <Group gap="xs" wrap="nowrap">
+              <IconClock size={16} stroke={1.5} />
+              <Text size="xs" c="dimmed">
+                {`Další připomínka v ${formatTimeLabel(supplement.reminderHour)}`}
+              </Text>
+            </Group>
+          </Stack>
+        </Group>
+        <Button
+          variant={isTakenToday ? 'light' : 'gradient'}
+          gradient={{ from: 'indigo', to: 'green' }}
+          onClick={() => onTake(supplement.id)}
+          disabled={isTakenToday}
+          fullWidth={compact}
         >
-            {isTakenToday ? 'Užito' : 'Vzít'}
-        </button>
-    </div>
+          {isTakenToday ? 'Už hotovo' : 'Splněno'}
+        </Button>
+      </Stack>
+    </Card>
   );
 };
 

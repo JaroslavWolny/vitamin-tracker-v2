@@ -19,3 +19,25 @@ export const getFriendlyDate = (): string => {
         month: 'long'
     });
 }
+
+/**
+ * Returns an array of past dates (including today) as 'YYYY-MM-DD' strings.
+ * @param days Number of days to include counting backwards from today.
+ */
+export const getPastDates = (days: number): string[] => {
+  const today = new Date();
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - index);
+    return date.toISOString().split('T')[0];
+  });
+};
+
+/**
+ * Formats hour + minute pairs into HH:MM for display.
+ */
+export const formatTimeLabel = (hour: number, minute = 0): string => {
+  return `${hour.toString().padStart(2, '0')}:${minute
+    .toString()
+    .padStart(2, '0')}`;
+};

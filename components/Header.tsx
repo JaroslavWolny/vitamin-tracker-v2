@@ -1,48 +1,94 @@
 import React from 'react';
-import { getFriendlyDate } from '../utils/dateUtils';
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  Paper,
+  RingProgress,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { IconCheck, IconPencil } from '@tabler/icons-react';
 
 interface HeaderProps {
-    isEditing: boolean;
-    onToggleEdit: () => void;
+  isEditing: boolean;
+  onToggleEdit: () => void;
+  completionRate: number;
+  todayLabel: string;
+  supplementsLeft: number;
+  isCompact?: boolean;
 }
 
-const PencilIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-    </svg>
-);
-
-const CheckIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-    </svg>
-);
-
-
-const Header: React.FC<HeaderProps> = ({ isEditing, onToggleEdit }) => {
-  const todayFriendly = getFriendlyDate();
+const Header: React.FC<HeaderProps> = ({
+  isEditing,
+  onToggleEdit,
+  completionRate,
+  todayLabel,
+  supplementsLeft,
+  isCompact = false,
+}) => {
+  const ringSize = isCompact ? 86 : 110;
+  const ringThickness = isCompact ? 10 : 12;
 
   return (
-    <header className="pt-8">
-        <div className="relative flex justify-center items-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white tracking-tight text-center">
-              {isEditing ? 'Správa doplňků' : 'Denní přehled'}
-            </h1>
-            <button
-                onClick={onToggleEdit}
-                className="absolute top-1/2 -translate-y-1/2 right-0 flex items-center justify-center h-10 w-10 rounded-full transition-colors duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                aria-label={isEditing ? 'Dokončit úpravy' : 'Upravit seznam'}
-            >
-                {isEditing ? <CheckIcon className="w-6 h-6" /> : <PencilIcon className="w-5 h-5" />}
-            </button>
-        </div>
-      
-        {!isEditing && (
-            <p className="text-center text-lg text-indigo-500 dark:text-indigo-400 font-medium mt-2 capitalize">
-                {todayFriendly}
-            </p>
-        )}
-    </header>
+    <Paper
+      radius="xl"
+      p={isCompact ? 'md' : 'lg'}
+      withBorder
+      style={{
+        background:
+          'linear-gradient(135deg, rgba(97, 74, 255, 0.9), rgba(52, 211, 153, 0.85))',
+      }}
+    >
+      <Group
+        align="stretch"
+        justify="space-between"
+        wrap={isCompact ? 'wrap' : 'nowrap'}
+        gap={isCompact ? 'lg' : 'xl'}
+      >
+        <Stack gap={isCompact ? 4 : 8} style={{ flex: 1, minWidth: 0 }}>
+          <Badge color="white" variant="light" size="lg">
+            {todayLabel}
+          </Badge>
+          <div>
+            <Title order={isCompact ? 3 : 2} c="white" fw={800}>
+              Dávky pod kontrolou
+            </Title>
+            <Text c="white" opacity={0.85} size={isCompact ? 'xs' : 'sm'}>
+              {supplementsLeft === 0
+                ? 'Vše hotovo, můžeš chillovat ✨'
+                : `Zbývá vyřešit ${supplementsLeft} položek.`}
+            </Text>
+          </div>
+        </Stack>
+        <Stack
+          align="center"
+          gap="xs"
+          style={{ minWidth: isCompact ? '100%' : 'auto' }}
+        >
+          <RingProgress
+            sections={[{ value: completionRate, color: '#34d399' }]}
+            label={
+              <Text c="white" fw={700} size="md">
+                {completionRate}%
+              </Text>
+            }
+            size={ringSize}
+            thickness={ringThickness}
+          />
+          <ActionIcon
+            aria-label="Přepnout režim úprav"
+            size={isCompact ? 'md' : 'lg'}
+            radius="xl"
+            variant="white"
+            onClick={onToggleEdit}
+          >
+            {isEditing ? <IconCheck size={18} /> : <IconPencil size={18} />}
+          </ActionIcon>
+        </Stack>
+      </Group>
+    </Paper>
   );
 };
 
